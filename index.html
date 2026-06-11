@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>sentry-relay Helm repository</title>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; max-width: 720px; margin: 4rem auto; padding: 0 1rem; color: #1a1a2e; line-height: 1.6; }
+  pre { background: #16213e; color: #e8e8e8; padding: 1rem; border-radius: 8px; overflow-x: auto; }
+  a { color: #b03a5b; }
+  h1 { font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>sentry-relay</h1>
+<p>Helm repository for the standalone <a href="https://docs.sentry.io/product/relay/">Sentry Relay</a> chart. Run Relay on Kubernetes against a self-hosted Sentry or sentry.io.</p>
+<pre>helm repo add sentry-relay https://rootindex.github.io/sentry-relay-helm
+helm install relay sentry-relay/sentry-relay \
+  --set upstream=https://sentry.internal.example.com</pre>
+<p>
+  <a href="https://github.com/rootindex/sentry-relay-helm">Source &amp; documentation on GitHub</a> ·
+  <a href="https://artifacthub.io/packages/helm/sentry-relay/sentry-relay">Artifact Hub</a> ·
+  <a href="index.yaml">index.yaml</a>
+</p>
+<p>Apache-2.0. Not affiliated with Sentry (Functional Software, Inc.).</p>
+</body>
+</html>
