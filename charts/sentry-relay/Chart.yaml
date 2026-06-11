@@ -1,0 +1,23 @@
+apiVersion: v2
+name: sentry-relay
+description: Standalone Sentry Relay, forwards events from your Kubernetes cluster to a self-hosted Sentry or sentry.io upstream
+type: application
+version: 0.1.0
+appVersion: "26.5.2"
+home: https://github.com/rootindex/sentry-relay-helm
+sources:
+  - https://github.com/rootindex/sentry-relay-helm
+  - https://github.com/getsentry/relay
+keywords:
+  - sentry
+  - relay
+  - error-tracking
+  - observability
+maintainers:
+  - name: rootindex
+    email: 505211+rootindex@users.noreply.github.com
+annotations:
+  artifacthub.io/license: Apache-2.0
+  artifacthub.io/links: |
+    - name: Relay documentation
+      url: https://docs.sentry.io/product/relay/

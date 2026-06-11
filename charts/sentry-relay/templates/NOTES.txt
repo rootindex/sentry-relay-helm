@@ -1,0 +1,31 @@
+Sentry Relay {{ .Values.image.tag | default .Chart.AppVersion }} deployed in {{ include "sentry-relay.mode" . }} mode.
+
+Upstream: {{ .Values.upstream }}
+
+In-cluster ingest endpoint:
+  http://{{ include "sentry-relay.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+
+Point your SDK DSNs at this endpoint, keeping the original public key and
+project id from the DSN your Sentry issued:
+  https://<key>@<sentry-host>/<project-id>
+becomes
+  http://<key>@{{ include "sentry-relay.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}/<project-id>
+{{- if eq (include "sentry-relay.mode" .) "managed" }}
+
+MANAGED MODE: relay only accepts events after its public key is registered
+with your Sentry. One-time step, in the Sentry UI:
+  Organization Settings -> Relays -> New Relay Key -> paste the public key
+  (relay credentials show, or .public_key in credentials.json)
+If registration is missing or fails, relay accepts NO events. The readiness
+probe stays failing until relay authenticates with the upstream: register the
+key BEFORE installing, or `helm install --wait` / `--atomic` will time out.
+If pods are Running but Unready, check `kubectl logs` for auth errors.
+
+After rotating the credentials Secret in place, run
+`kubectl rollout restart deployment/{{ include "sentry-relay.fullname" . }}`
+(relay reads credentials only at startup) and register the new public key.
+{{- end }}
+
+Verify:
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+  helm -n {{ .Release.Namespace }} test {{ .Release.Name }}

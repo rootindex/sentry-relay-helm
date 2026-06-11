@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ include "sentry-relay.fullname" . }}-test-connection
+  labels:
+    {{- include "sentry-relay.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: test
+spec:
+  {{- with .Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 65534
+    seccompProfile:
+      type: RuntimeDefault
+  containers:
+    - name: healthcheck
+      image: {{ .Values.tests.image }}
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop:
+            - ALL
+      command:
+        - wget
+        - -qO-
+        - http://{{ include "sentry-relay.fullname" . }}:{{ .Values.service.port }}/api/relay/healthcheck/ready/
+  restartPolicy: Never

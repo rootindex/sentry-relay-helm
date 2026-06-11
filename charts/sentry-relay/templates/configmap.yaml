@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "sentry-relay.fullname" . }}
+  labels:
+    {{- include "sentry-relay.labels" . | nindent 4 }}
+data:
+  config.yml: |
+    {{- include "sentry-relay.config" . | nindent 4 }}

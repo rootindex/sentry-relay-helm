@@ -1,0 +1,24 @@
+# Lint/template example only: managed mode cannot pass `ct install` in CI
+# (needs a real credentials Secret and a reachable upstream for readiness).
+mode: managed
+upstream: https://sentry.internal.example.com
+credentials:
+  existingSecret: sentry-relay-credentials
+config:
+  http:
+    host_header: sentry.internal.example.com
+  limits:
+    max_concurrent_requests: 100
+autoscaling:
+  enabled: true
+  targetMemoryUtilizationPercentage: 80
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 200m
+  hosts:
+    - host: relay.example.com
+      paths:
+        - path: /
+          pathType: Prefix

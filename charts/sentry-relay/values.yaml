@@ -1,0 +1,155 @@
+# Official Relay sizing guidance: at least 2 instances, 2GB RAM each.
+# https://docs.sentry.io/product/relay/operating-guidelines/
+replicaCount: 2
+
+image:
+  repository: ghcr.io/getsentry/relay
+  # Defaults to the chart appVersion. Relay is CalVer, released monthly alongside Sentry;
+  # keep this close to your Sentry server release.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# Relay mode: "proxy" or "managed".
+# proxy   - forwards events with minimal processing, no credentials or registration needed.
+# managed - pulls project configs from the upstream (PII scrubbing, filtering at the edge);
+#           requires credentials.existingSecret AND a one-time registration of the public key
+#           in your Sentry: org Settings -> Relays -> New Relay Key.
+# static mode was removed in Relay 25.9.0.
+mode: proxy
+
+# URL of your upstream Sentry, e.g. https://sentry.internal.example.com
+upstream: ""
+
+# managed mode only. The relay image runs as uid 65532, so on a Linux host the
+# bind-mount dir must be writable by it (and use :z on SELinux hosts). Generate once with:
+#   mkdir relay-config
+#   sudo chown -R 65532:65532 relay-config
+#   docker run --rm -it -v "$PWD/relay-config:/work/.relay" ghcr.io/getsentry/relay config init
+# then:
+#   kubectl create secret generic sentry-relay-credentials --from-file=credentials.json=relay-config/credentials.json
+# Rotating the Secret in place does not restart pods; run a rollout restart afterwards.
+credentials:
+  existingSecret: ""
+  secretKey: credentials.json
+
+# Deep-merged over the generated config.yml. Full reference:
+# https://docs.sentry.io/product/relay/options/
+# Stored in a ConfigMap: do NOT put secrets here. For secret-bearing options use
+# extraEnv with valueFrom.secretKeyRef and relay's env overrides (e.g. RELAY_UPSTREAM_URL).
+# config:
+#   http:
+#     host_header: sentry.internal.example.com
+#   limits:
+#     max_concurrent_requests: 100
+config: {}
+
+# Extra environment variables for the relay container.
+extraEnv: []
+
+service:
+  type: ClusterIP
+  port: 3000
+
+# Relay speaks plain HTTP by design; terminate TLS at the ingress.
+# Any proxy in front of relay must allow 200MB request bodies (crash reports,
+# attachments): https://docs.sentry.io/product/relay/operating-guidelines/
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  # annotations:
+  #   nginx.ingress.kubernetes.io/proxy-body-size: 200m
+  hosts:
+    - host: relay.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: "1"
+    memory: 2Gi
+  limits:
+    memory: 2Gi
+
+livenessProbe:
+  httpGet:
+    path: /api/relay/healthcheck/live/
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 5
+
+readinessProbe:
+  httpGet:
+    path: /api/relay/healthcheck/ready/
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 75
+  # Memory is usually the binding constraint for relay (envelope buffering);
+  # note memory-based scaling can flap during upstream outages.
+  # targetMemoryUtilizationPercentage: 80
+
+# minAvailable is ignored when maxUnavailable is set.
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+  maxUnavailable: ""
+
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+# The official relay image is distroless, running as uid 65532, and needs no
+# writable filesystem (the envelope spool is in-memory unless configured otherwise).
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Delays SIGTERM so in-flight traffic drains while endpoints deregister.
+# Uses the native sleep action (Kubernetes >= 1.30); the distroless image has no
+# shell, so an exec-based sleep would fail. Set to null to disable.
+lifecycle:
+  preStop:
+    sleep:
+      seconds: 5
+
+extraVolumes: []
+extraVolumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+priorityClassName: ""
+terminationGracePeriodSeconds: 30
+
+tests:
+  image: busybox:1.37
