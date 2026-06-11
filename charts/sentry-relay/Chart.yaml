@@ -21,3 +21,6 @@ annotations:
   artifacthub.io/links: |
     - name: Relay documentation
       url: https://docs.sentry.io/product/relay/
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial release, proxy and managed modes against self-hosted Sentry
