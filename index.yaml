@@ -1,0 +1,35 @@
+apiVersion: v1
+entries:
+  sentry-relay:
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial release, proxy and managed modes against self-hosted Sentry
+      artifacthub.io/license: Apache-2.0
+      artifacthub.io/links: |
+        - name: Relay documentation
+          url: https://docs.sentry.io/product/relay/
+    apiVersion: v2
+    appVersion: 26.5.2
+    created: "2026-06-11T13:21:43.028684257Z"
+    description: Standalone Sentry Relay, forwards events from your Kubernetes cluster
+      to a self-hosted Sentry or sentry.io upstream
+    digest: ed36f4ff4bd34fa23cdb3c6daa5caf950332788439e0c3e17010fd3f34fb7a11
+    home: https://github.com/rootindex/sentry-relay-helm
+    keywords:
+    - sentry
+    - relay
+    - error-tracking
+    - observability
+    maintainers:
+    - email: 505211+rootindex@users.noreply.github.com
+      name: rootindex
+    name: sentry-relay
+    sources:
+    - https://github.com/rootindex/sentry-relay-helm
+    - https://github.com/getsentry/relay
+    type: application
+    urls:
+    - https://github.com/rootindex/sentry-relay-helm/releases/download/sentry-relay-0.1.0/sentry-relay-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-06-11T13:21:43.028690348Z"
